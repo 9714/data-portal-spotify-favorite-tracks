@@ -60,7 +60,7 @@ BigQuery  ←  別リポジトリの Streamlit Dashboard が参照
 | リソース | 設定 |
 |---|---|
 | Cloud Run Jobs | 512Mi / タイムアウト 300s / asia-northeast1 |
-| Cloud Scheduler | `0 21 * * 0` UTC（JST 月曜 06:00） |
+| Cloud Scheduler | `0 6 * * 1` Asia/Tokyo（JST 月曜 06:00） |
 | Cloud Storage | `dp-spotify-raw` / asia-northeast1 |
 | BigQuery（raw） | `raw` dataset / asia-northeast1 |
 | BigQuery（mart） | `mart` dataset / asia-northeast1 |
