@@ -1,0 +1,12 @@
+[sqlfluff]
+dialect = bigquery
+templater = dbt
+
+[sqlfluff:templater:dbt]
+project_dir = dbt
+profiles_dir = dbt
+profile = spotify
+target = dev
+
+[sqlfluff:indentation]
+tab_space_size = 4

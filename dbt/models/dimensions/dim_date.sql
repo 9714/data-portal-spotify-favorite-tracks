@@ -11,12 +11,12 @@ with date_spine as (
 final as (
 
     select
-        cast(format_date('%Y%m%d', date_day) as int64)  as date_id,
-        date_day                                         as calendar_date,
-        extract(year from date_day)                      as year,
-        extract(month from date_day)                     as month,
-        extract(day from date_day)                       as day,
-        extract(dayofweek from date_day)                 as day_of_week
+        cast(format_date('%Y%m%d', date_day) as int64) as date_id,
+        date_day as calendar_date,
+        extract(year from date_day) as year,
+        extract(month from date_day) as month,
+        extract(day from date_day) as day,
+        extract(dayofweek from date_day) as day_of_week
     from date_spine
 
 )
