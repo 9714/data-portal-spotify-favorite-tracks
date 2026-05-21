@@ -1,0 +1,147 @@
+version: 2
+
+models:
+  - name: mart_saved_tracks
+    description: Looker Studio 向けワイドテーブル。fct_saved_tracks・dim_track・dim_date を非正規化。grain=track_id（1行=1曲）。
+    columns:
+      - name: added_at
+        description: お気に入りに追加した日時（UTC）
+        data_type: timestamp
+        tests:
+          - not_null
+      - name: added_datetime
+        description: お気に入りに追加した日時（JST）
+        data_type: datetime
+        tests:
+          - not_null
+      - name: added_date
+        description: お気に入りに追加した日付（JST）
+        data_type: date
+        tests:
+          - not_null
+      - name: year
+        description: 追加年（JST）
+        data_type: int64
+        tests:
+          - not_null
+      - name: month
+        description: 追加月（JST、1〜12）
+        data_type: int64
+        tests:
+          - not_null
+      - name: day
+        description: 追加日（JST、1〜31）
+        data_type: int64
+        tests:
+          - not_null
+      - name: day_of_week
+        description: 曜日（1=日曜, 2=月曜, ..., 7=土曜）
+        data_type: int64
+        tests:
+          - not_null
+      - name: track_id
+        description: Spotify トラック ID（主キー）
+        data_type: string
+        tests:
+          - not_null
+          - unique
+      - name: track_name
+        description: 曲名
+        data_type: string
+        tests:
+          - not_null
+      - name: duration_ms
+        description: 曲の長さ（ミリ秒）
+        data_type: int64
+        tests:
+          - not_null
+      - name: duration_min
+        description: 曲の長さ（分、小数第2位）
+        data_type: float64
+        tests:
+          - not_null
+      - name: explicit
+        description: 過激なコンテンツフラグ
+        data_type: bool
+        tests:
+          - not_null
+      - name: isrc
+        description: 国際標準レコーディングコード（ISRC）。Spotify 側で未設定の場合は NULL。
+        data_type: string
+      - name: spotify_url
+        description: Spotify の曲 URL
+        data_type: string
+        tests:
+          - not_null
+      - name: album_id
+        description: Spotify アルバム ID
+        data_type: string
+        tests:
+          - not_null
+      - name: album_name
+        description: アルバム名
+        data_type: string
+        tests:
+          - not_null
+      - name: album_type
+        description: アルバム種別（album / single / compilation）
+        data_type: string
+        tests:
+          - not_null
+      - name: album_release_date
+        description: アルバムのリリース日文字列。Spotify が年のみ（例：1995）を返す場合があるため文字列で保持。
+        data_type: string
+        tests:
+          - not_null
+      - name: album_release_year
+        description: album_release_date の先頭4文字から取得したリリース年。パース失敗時は NULL。
+        data_type: int64
+
+  - name: mart_track_artists
+    description: Looker Studio 向けアーティスト分析テーブル。fct_saved_tracks・int_track_artists・dim_artist・dim_date を結合。grain=track_id × artist_id。
+    columns:
+      - name: added_at
+        description: お気に入りに追加した日時（UTC）
+        data_type: timestamp
+        tests:
+          - not_null
+      - name: added_datetime
+        description: お気に入りに追加した日時（JST）
+        data_type: datetime
+        tests:
+          - not_null
+      - name: added_date
+        description: お気に入りに追加した日付（JST）
+        data_type: date
+        tests:
+          - not_null
+      - name: year
+        description: 追加年（JST）
+        data_type: int64
+        tests:
+          - not_null
+      - name: month
+        description: 追加月（JST、1〜12）
+        data_type: int64
+        tests:
+          - not_null
+      - name: track_id
+        description: Spotify トラック ID
+        data_type: string
+        tests:
+          - not_null
+      - name: artist_id
+        description: Spotify アーティスト ID
+        data_type: string
+        tests:
+          - not_null
+      - name: artist_name
+        description: アーティスト名
+        data_type: string
+        tests:
+          - not_null
+      - name: artist_spotify_url
+        description: Spotify のアーティスト URL
+        data_type: string
+        tests:
+          - not_null
