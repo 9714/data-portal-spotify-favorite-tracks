@@ -14,21 +14,13 @@ Step 2: GCS → BigQuery Load Job (raw テーブル)
 Step 3: dbt run
 ```
 
-### 差分取得ロジック
-- 初回：`saved_tracks` を全件取得
-- 2回目以降：`raw.saved_tracks` の `MAX(added_at)` を取得し、それ以降のみ取得
-- `audio_features` は当日取得した `saved_tracks` の `track_id` 分だけ取得する
-
 ### GCS への書き込み
 - フォーマット：JSONL（1行1レコード）
 - パス：`raw/saved_tracks/YYYY-MM-DD.jsonl` / `raw/audio_features/YYYY-MM-DD.jsonl`
 - フラット化しない。ネスト構造はそのまま書き込む（dbt に委譲）
 
-### 取得方式
-毎回全件取得する。Liked Songs は個人利用で数千曲規模のため差分取得は不要。
-
 ### BigQuery への Load
-- `WRITE_TRUNCATE`（毎回上書き。全件取得のため APPEND だと重複する）
+- `WRITE_TRUNCATE`（毎回全件取得のため上書き）
 - スキーマ自動検出は使わず、明示的にスキーマを定義する
 
 ---

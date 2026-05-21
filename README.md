@@ -23,7 +23,7 @@ BigQuery  ←  別リポジトリの Streamlit Dashboard が参照
 | `saved_tracks` | お気に入り曲 + `added_at` |
 | `audio_features` | danceability / energy / valence など9項目 |
 
-差分取得：初回は全件、以降は `added_at` の最新日時以降のみ取得。
+毎回全件取得する。
 
 ## ディレクトリ構成
 
