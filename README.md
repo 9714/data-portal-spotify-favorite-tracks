@@ -114,6 +114,6 @@ cd etl && set -a && source ../.env && set +a && uv run python3 main.py
 
 ```bash
 # dbt（実装後）
-dbt run --project-dir dbt/
-dbt test --project-dir dbt/
+cd etl && uv run dbt run --project-dir ../dbt/
+cd etl && uv run dbt test --project-dir ../dbt/
 ```
