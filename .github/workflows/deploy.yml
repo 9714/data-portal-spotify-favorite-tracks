@@ -1,0 +1,43 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+env:
+  IMAGE: asia-northeast1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/spotify-etl/etl
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: github-actions-sa@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - run: gcloud auth configure-docker asia-northeast1-docker.pkg.dev --quiet
+
+      - run: |
+          docker build -t $IMAGE:${{ github.sha }} -t $IMAGE:latest .
+          docker push $IMAGE:${{ github.sha }}
+          docker push $IMAGE:latest
+
+      - run: |
+          gcloud run jobs deploy spotify-etl \
+            --image $IMAGE:${{ github.sha }} \
+            --region ${{ secrets.GCP_REGION }} \
+            --memory 512Mi \
+            --task-timeout 300 \
+            --set-secrets="SPOTIFY_CLIENT_ID=spotify-client-id:latest,SPOTIFY_CLIENT_SECRET=spotify-client-secret:latest,SPOTIFY_REFRESH_TOKEN=spotify-refresh-token:latest" \
+            --set-env-vars="GCS_BUCKET=dp-spotify-raw,BQ_PROJECT=${{ secrets.GCP_PROJECT_ID }},BQ_DATASET=raw" \
+            --service-account=etl-job-sa@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com \
+            --project=${{ secrets.GCP_PROJECT_ID }}
