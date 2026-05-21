@@ -35,8 +35,8 @@ jobs:
         uses: google-github-actions/auth@v2
         with:
           # お手元の設定に合わせて provider と service_account を書き換えてください
-          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
-          service_account: github-actions-sa@favorite-track-analyze.iam.gserviceaccount.com
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SA }}
 
       - name: Install Python
         uses: actions/setup-python@v5
