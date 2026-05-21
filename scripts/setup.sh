@@ -15,6 +15,6 @@ uv pip install -r "$ROOT/requirements-dev.txt"
 
 echo "------------------------------------------------"
 echo "Done! Pure root-based environment is ready."
-echo "- Run lint: uv run sqlfluff lint dbt/models/ --dialect bigquery"
+echo "- Run lint: uv run sqlfluff lint dbt/models/"
 echo "- Run ETL:  uv run python3 etl/main.py"
 echo "------------------------------------------------"

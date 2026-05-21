@@ -54,6 +54,9 @@ jobs:
             --project=${{ secrets.GCP_PROJECT_ID }} 2>/dev/null; then
             gcloud scheduler jobs update http spotify-etl-scheduler \
               --schedule="0 21 * * 0" \
+              --uri="https://${{ secrets.GCP_REGION }}-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/${{ secrets.GCP_PROJECT_ID }}/jobs/spotify-etl:run" \
+              --http-method=POST \
+              --oauth-service-account-email=scheduler-sa@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com \
               --location=${{ secrets.GCP_REGION }} \
               --project=${{ secrets.GCP_PROJECT_ID }}
           else

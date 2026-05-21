@@ -51,6 +51,7 @@ def main():
     )
     print(result.stdout)
     if result.returncode != 0:
+        print(result.stderr)
         raise subprocess.CalledProcessError(
             result.returncode, result.args, result.stdout, result.stderr
         )
