@@ -25,8 +25,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install sqlfluff
-        run: pip install sqlfluff dbt-bigquery
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
 
+      # dbt-bigquery、sqlfluff に加え、dbt連携プラグインを同じ環境にインストールします
+      - name: Install sqlfluff and dbt dependencies
+        run: pip install sqlfluff sqlfluff-templater-dbt dbt-bigquery
+
+      # dbtマクロを正常に解決するため、CI環境でもdbtの依存パッケージをダウンロードさせます
+      - name: Install dbt packages
+        run: dbt deps --project-dir dbt
+
+      # 引数から --dialect を削り、プロジェクトルートの .sqlfluff 設定ファイルを最優先で読ませます
       - name: Lint SQL
-        run: sqlfluff lint dbt/models/ --dialect bigquery
+        env:
+          # dbt のパース時に必要となる環境変数をダミー値（または任意の値）で注入します
+          BQ_PROJECT: "dummy-project-id"
+        run: sqlfluff lint dbt/models/
