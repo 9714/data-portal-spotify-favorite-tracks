@@ -13,6 +13,9 @@ clean-targets:
 
 models:
   spotify:
+    +persist_docs:
+      relation: true
+      columns: true
     staging:
       +materialized: view
     intermediate:
