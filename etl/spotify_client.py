@@ -15,6 +15,7 @@ class SpotifyClient:
         self._access_token = self._refresh_access_token()
 
     def _refresh_access_token(self) -> str:
+        # Refresh Token を使って Access Token を取得する（有効期限1時間）
         resp = requests.post(
             self._TOKEN_URL,
             data={"grant_type": "refresh_token", "refresh_token": self._refresh_token},
@@ -24,6 +25,7 @@ class SpotifyClient:
         return resp.json()["access_token"]
 
     def _get(self, url: str, params: dict = None) -> dict:
+        # 429 レートリミット時は Retry-After ヘッダの秒数だけ待ってリトライ
         for attempt in range(3):
             resp = requests.get(
                 url,
@@ -38,10 +40,10 @@ class SpotifyClient:
         raise RuntimeError(f"Failed after 3 retries: {url}")
 
     def get_saved_tracks(self, since: datetime = None) -> list[dict]:
-        """Fetch saved tracks. If since is given, stops when older tracks are encountered."""
+        # API は新しい順で返すため、since より古いレコードに達した時点で打ち切る
         tracks = []
         url = f"{self._API_BASE}/me/tracks"
-        params = {"limit": 50}
+        params = {"limit": 50}  # 最大50件/リクエスト
 
         while url:
             data = self._get(url, params)
@@ -53,15 +55,17 @@ class SpotifyClient:
                 tracks.append(item)
             time.sleep(0.1)
             url = data.get("next")
-            params = None
+            params = None  # next URL にはすでにクエリパラメータが含まれている
 
         return tracks
 
     def get_audio_features(self, track_ids: list[str]) -> list[dict]:
+        # 最大100件/リクエストのためチャンク分割して取得
         features = []
         for i in range(0, len(track_ids), 100):
             chunk = track_ids[i : i + 100]
             data = self._get(f"{self._API_BASE}/audio-features", params={"ids": ",".join(chunk)})
+            # 取得できなかったトラック（None）は除外する
             features.extend(f for f in data["audio_features"] if f)
             time.sleep(0.1)
         return features
