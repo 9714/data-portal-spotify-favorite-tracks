@@ -107,21 +107,23 @@ fct_saved_tracks          added_at / track_id / artist_id / date_id の集約テ
 ## ローカル開発
 
 ```bash
-# 初回のみ：BigQuery 認証
+# 初回のみ
 gcloud auth application-default login
+cp .env.example .env  # SPOTIFY_* と BQ_PROJECT を入力
 
-# venv のセットアップ
-uv venv && source .venv/bin/activate
-uv pip install -r etl/requirements.txt
-uv pip install dbt-bigquery
+# セットアップ
+cd etl && uv venv && source .venv/bin/activate && uv pip install -r requirements.txt
 
-# 環境変数の設定（Secret Manager の代替）
-cp .env.example .env  # 値を編集する
+# ETL 実行（Step 1: Spotify API → GCS）
+set -a && source ../.env && set +a && python main.py
+```
 
-# ETL の実行
-python etl/main.py
+実行後、GCS バケット `dp-spotify-raw` に以下が作成されれば成功：
+- `raw/saved_tracks/YYYY-MM-DD.jsonl`
+- `raw/audio_features/YYYY-MM-DD.jsonl`
 
-# dbt の実行
+```bash
+# dbt（実装後）
 dbt run --project-dir dbt/
 dbt test --project-dir dbt/
 ```
