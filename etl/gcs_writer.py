@@ -7,7 +7,7 @@ from google.cloud import storage
 
 class GCSWriter:
     def __init__(self):
-        self._bucket = storage.Client().bucket(os.environ["GCS_BUCKET"])
+        self._bucket = storage.Client(project=os.environ["BQ_PROJECT"]).bucket(os.environ["GCS_BUCKET"])
 
     def write(self, records: list[dict], prefix: str, run_date: date) -> str:
         # raw/{prefix}/YYYY-MM-DD.jsonl に書き込む（フラット化はせず生データのまま）

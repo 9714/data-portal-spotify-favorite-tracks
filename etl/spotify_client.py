@@ -52,14 +52,3 @@ class SpotifyClient:
             params = None  # next URL にはすでにクエリパラメータが含まれている
 
         return tracks
-
-    def get_audio_features(self, track_ids: list[str]) -> list[dict]:
-        # 最大100件/リクエストのためチャンク分割して取得
-        features = []
-        for i in range(0, len(track_ids), 100):
-            chunk = track_ids[i : i + 100]
-            data = self._get(f"{self._API_BASE}/audio-features", params={"ids": ",".join(chunk)})
-            # 取得できなかったトラック（None）は除外する
-            features.extend(f for f in data["audio_features"] if f)
-            time.sleep(0.1)
-        return features

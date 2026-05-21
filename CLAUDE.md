@@ -57,36 +57,15 @@ Step 3: dbt run
 ]
 ```
 
-### raw.audio_features
-```json
-[
-  {"name": "id",               "type": "STRING"},
-  {"name": "danceability",     "type": "FLOAT"},
-  {"name": "energy",           "type": "FLOAT"},
-  {"name": "key",              "type": "INTEGER"},
-  {"name": "loudness",         "type": "FLOAT"},
-  {"name": "mode",             "type": "INTEGER"},
-  {"name": "speechiness",      "type": "FLOAT"},
-  {"name": "acousticness",     "type": "FLOAT"},
-  {"name": "instrumentalness", "type": "FLOAT"},
-  {"name": "liveness",         "type": "FLOAT"},
-  {"name": "valence",          "type": "FLOAT"},
-  {"name": "tempo",            "type": "FLOAT"},
-  {"name": "duration_ms",      "type": "INTEGER"},
-  {"name": "time_signature",   "type": "INTEGER"}
-]
-```
-
 ---
 
 ## dbt モデル設計
 
 ### staging
 - `stg_saved_tracks`：`raw.saved_tracks` の `track` JSON を展開してカラム化
-- `stg_audio_features`：`raw.audio_features` をリネーム・型変換
 
 ### dimensions
-- `dim_track`：`track_id` でユニーク化。audio_features を JOIN して保持
+- `dim_track`：`track_id` でユニーク化
 - `dim_artist`：`artists` 配列を UNNEST して `artist_id` でユニーク化
 - `dim_date`：`added_at` から `date_id`（YYYYMMDD整数）/ `year` / `month` / `day` / `day_of_week` を生成
 

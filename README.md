@@ -21,7 +21,6 @@ BigQuery  ←  別リポジトリの Streamlit Dashboard が参照
 | Spotify API | 内容 |
 |---|---|
 | `saved_tracks` | お気に入り曲 + `added_at` |
-| `audio_features` | danceability / energy / valence など9項目 |
 
 毎回全件取得する。
 
