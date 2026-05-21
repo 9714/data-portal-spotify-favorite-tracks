@@ -22,6 +22,8 @@ Step 3: dbt run
 ### BigQuery への Load
 - `WRITE_TRUNCATE`（毎回全件取得のため上書き）
 - スキーマ自動検出は使わず、明示的にスキーマを定義する
+- `GCS_ENV=dev` のときはデータセットに `dev_` プレフィックスを付ける（例：`dev_raw`）。dbt も同様
+- `GCS_ENV=prd` のときはプレフィックスなし（例：`raw`）
 
 ---
 
@@ -111,6 +113,20 @@ uv run sqlfluff fix ../dbt/ --dialect bigquery    # format
 ```
 
 dbt モデル（`.sql`）はすべて sqlfluff の対象。CI も同じコマンドを実行する。
+
+---
+
+## ログ形式
+
+```
+=== ETL start: YYYY-MM-DD ===
+[Step N] <処理名>: start
+[Step N] <処理名>: done (<補足情報>)
+=== ETL done ===
+```
+
+- 各ステップの開始・終了を `[Step N] 処理名: start/done` で出力する
+- done 行には件数・パスなど有用な補足情報を含める
 
 ---
 
