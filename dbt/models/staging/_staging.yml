@@ -11,13 +11,10 @@ sources:
     tables:
       - name: saved_tracks
         description: Spotify お気に入り楽曲の生データ。ETL により毎週全件 WRITE_TRUNCATE でロード。
-      - name: artists
-        description: Spotify アーティストの生データ。ETL により毎週全件 WRITE_TRUNCATE でロード。
-        loaded_at_field: null
 
 models:
   - name: stg_saved_tracks
-    description: raw.saved_tracks の track JSON を展開したステージングモデル。1行=1曲。
+    description: track JSON を展開したステージングモデル。1行=1曲。
     columns:
       - name: added_at
         description: お気に入りに追加した日時
@@ -89,27 +86,3 @@ models:
         tests:
           - not_null
 
-  - name: stg_artists
-    description: raw.artists の artist JSON を展開したステージングモデル。1行=1アーティスト。
-    columns:
-      - name: artist_id
-        description: Spotify アーティスト ID（主キー）
-        data_type: string
-        tests:
-          - not_null
-          - unique
-      - name: artist_name
-        description: アーティスト名
-        data_type: string
-        tests:
-          - not_null
-      - name: genres
-        description: ジャンルの JSON 配列（例：["j-pop", "hip-hop"]）。登録なしの場合は空配列。
-        data_type: json
-        tests:
-          - not_null
-      - name: popularity
-        description: Spotify が算出するアーティスト人気度（0〜100）
-        data_type: int64
-        tests:
-          - not_null

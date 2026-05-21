@@ -2,7 +2,7 @@ version: 2
 
 models:
   - name: mart_saved_tracks
-    description: Looker Studio 向けワイドテーブル。fct_saved_tracks・dim_track・dim_date を非正規化。grain=track_id（1行=1曲）。
+    description: Looker Studio 向けワイドテーブル。grain=track_id（1行=1曲）。
     columns:
       - name: added_at
         description: お気に入りに追加した日時（UTC）
@@ -47,6 +47,11 @@ models:
           - unique
       - name: track_name
         description: 曲名
+        data_type: string
+        tests:
+          - not_null
+      - name: artist_names
+        description: アーティスト名（複数の場合は " / " 区切り、アルファベット順）
         data_type: string
         tests:
           - not_null
@@ -98,7 +103,7 @@ models:
         data_type: int64
 
   - name: mart_track_artists
-    description: Looker Studio 向けアーティスト分析テーブル。fct_saved_tracks・int_track_artists・dim_artist・dim_date を結合。grain=track_id × artist_id。
+    description: Looker Studio 向けアーティスト分析テーブル。grain=track_id × artist_id。
     columns:
       - name: added_at
         description: お気に入りに追加した日時（UTC）
@@ -145,9 +150,3 @@ models:
         data_type: string
         tests:
           - not_null
-      - name: genres
-        description: ジャンルの JSON 配列（例：["j-pop", "hip-hop"]）。Spotify 未登録の場合は空配列または NULL。
-        data_type: json
-      - name: artist_popularity
-        description: Spotify が算出するアーティスト人気度（0〜100）。stg_artists に存在しない場合は NULL。
-        data_type: int64

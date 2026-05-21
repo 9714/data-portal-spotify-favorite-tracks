@@ -41,8 +41,6 @@ final as (
         int_ta.artist_id,
         dim_artist.artist_name,
         dim_artist.spotify_url as artist_spotify_url,
-        dim_artist.genres,
-        dim_artist.popularity as artist_popularity,
         date(fct.added_datetime) as added_date
 
     from int_ta

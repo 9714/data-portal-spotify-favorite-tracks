@@ -55,7 +55,7 @@ models:
           - not_null
 
   - name: dim_artist
-    description: artist_id でユニーク化したアーティストディメンション。int_track_artists と stg_artists を結合して生成。
+    description: artist_id でユニーク化したアーティストディメンション。
     columns:
       - name: artist_id
         description: Spotify アーティスト ID（主キー）
@@ -73,12 +73,6 @@ models:
         data_type: string
         tests:
           - not_null
-      - name: genres
-        description: ジャンルの JSON 配列（例：["j-pop", "hip-hop"]）。Spotify 未登録の場合は空配列または NULL。
-        data_type: json
-      - name: popularity
-        description: Spotify が算出するアーティスト人気度（0〜100）。stg_artists に存在しない場合は NULL。
-        data_type: int64
 
   - name: dim_date
     description: 2005-01-01 から当日までの日付ディメンション。dbt_utils.date_spine で生成。
