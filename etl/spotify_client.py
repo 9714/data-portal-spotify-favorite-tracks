@@ -1,7 +1,6 @@
 import os
 import time
 import requests
-from datetime import datetime
 
 
 class SpotifyClient:
@@ -26,7 +25,7 @@ class SpotifyClient:
 
     def _get(self, url: str, params: dict = None) -> dict:
         # 429 レートリミット時は Retry-After ヘッダの秒数だけ待ってリトライ
-        for attempt in range(3):
+        for _ in range(3):
             resp = requests.get(
                 url,
                 headers={"Authorization": f"Bearer {self._access_token}"},
@@ -39,20 +38,15 @@ class SpotifyClient:
             return resp.json()
         raise RuntimeError(f"Failed after 3 retries: {url}")
 
-    def get_saved_tracks(self, since: datetime = None) -> list[dict]:
-        # API は新しい順で返すため、since より古いレコードに達した時点で打ち切る
+    def get_saved_tracks(self) -> list[dict]:
+        # 50件/リクエストでページネーションしながら全件取得
         tracks = []
         url = f"{self._API_BASE}/me/tracks"
-        params = {"limit": 50}  # 最大50件/リクエスト
+        params = {"limit": 50}
 
         while url:
             data = self._get(url, params)
-            for item in data["items"]:
-                if since:
-                    added_at = datetime.fromisoformat(item["added_at"].replace("Z", "+00:00"))
-                    if added_at <= since:
-                        return tracks
-                tracks.append(item)
+            tracks.extend(data["items"])
             time.sleep(0.1)
             url = data.get("next")
             params = None  # next URL にはすでにクエリパラメータが含まれている

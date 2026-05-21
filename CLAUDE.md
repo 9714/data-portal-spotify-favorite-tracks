@@ -24,8 +24,11 @@ Step 3: dbt run
 - パス：`raw/saved_tracks/YYYY-MM-DD.jsonl` / `raw/audio_features/YYYY-MM-DD.jsonl`
 - フラット化しない。ネスト構造はそのまま書き込む（dbt に委譲）
 
+### 取得方式
+毎回全件取得する。Liked Songs は個人利用で数千曲規模のため差分取得は不要。
+
 ### BigQuery への Load
-- `WRITE_APPEND`（日付パーティションに追記）
+- `WRITE_TRUNCATE`（毎回上書き。全件取得のため APPEND だと重複する）
 - スキーマ自動検出は使わず、明示的にスキーマを定義する
 
 ---

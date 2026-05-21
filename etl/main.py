@@ -9,10 +9,9 @@ def main():
     writer = GCSWriter()
     run_date = date.today()
 
-    # Step 1: Spotify API → GCS
-    # since=None で全件取得（差分取得は bq_loader 実装後に MAX(added_at) を渡す）
+    # Step 1: Spotify API → GCS（毎回全件取得、BQ 側で WRITE_TRUNCATE により上書き）
     print("Fetching saved tracks...")
-    tracks = client.get_saved_tracks(since=None)
+    tracks = client.get_saved_tracks()
     print(f"Fetched {len(tracks)} tracks")
 
     # ローカルトラック（track が null のケース）を除外してから ID を抽出
