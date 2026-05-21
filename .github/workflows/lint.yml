@@ -1,0 +1,32 @@
+name: Lint
+
+on:
+  pull_request:
+
+jobs:
+  lint-python:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install ruff
+        run: pip install ruff
+
+      - name: Check format
+        run: ruff format --check etl/
+
+      - name: Lint
+        run: ruff check etl/
+
+  lint-sql:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install sqlfluff
+        run: pip install sqlfluff dbt-bigquery
+
+      - name: Lint SQL
+        run: sqlfluff lint dbt/models/ --dialect bigquery
