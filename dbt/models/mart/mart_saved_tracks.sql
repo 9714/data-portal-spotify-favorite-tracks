@@ -26,6 +26,16 @@ dim_date as (
 
 ),
 
+track_artists as (
+
+    select
+        track_id,
+        string_agg(artist_name, ' / ' order by artist_name) as artist_names
+    from {{ ref('int_track_artists') }}
+    group by track_id
+
+),
+
 final as (
 
     select
@@ -40,6 +50,7 @@ final as (
 
         -- トラック
         dim_track.track_name,
+        track_artists.artist_names,
         dim_track.duration_ms,
         dim_track.explicit,
         dim_track.isrc,
@@ -58,6 +69,7 @@ final as (
     from fct
     left join dim_track on fct.track_id = dim_track.track_id
     left join dim_date on fct.date_id = dim_date.date_id
+    left join track_artists on fct.track_id = track_artists.track_id
 
 )
 

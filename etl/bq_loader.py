@@ -43,10 +43,6 @@ class BQLoader:
                 bigquery.SchemaField("added_at", "TIMESTAMP"),
                 bigquery.SchemaField("track", "JSON"),
             ],
-            "artists": [
-                bigquery.SchemaField("artist_id", "STRING"),
-                bigquery.SchemaField("artist", "JSON"),
-            ],
         }
         if table_name not in schemas:
             raise ValueError(f"Unknown table: {table_name}")
@@ -55,6 +51,5 @@ class BQLoader:
     def _get_partition_field(self, table_name: str) -> str | None:
         partition_fields = {
             "saved_tracks": "added_at",
-            "artists": None,
         }
         return partition_fields.get(table_name)
