@@ -1,7 +1,10 @@
 from datetime import date
 
+from dotenv import load_dotenv
 from gcs_writer import GCSWriter
 from spotify_client import SpotifyClient
+
+load_dotenv()
 
 
 def main():
