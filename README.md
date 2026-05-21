@@ -110,15 +110,8 @@ fct_saved_tracks          added_at / track_id / artist_id / date_id の集約テ
 gcloud auth application-default login
 cp .env.example .env  # SPOTIFY_* と BQ_PROJECT を入力
 
-# 仮想環境の構築（初回のみ）
-cd etl
-uv venv
-uv pip install -r requirements.txt
-
-# ETL 実行
-source .venv/bin/activate
-set -a && source ../.env && set +a
-python3 main.py
+# ETL 実行（venv 未作成なら自動でセットアップ）
+./scripts/run_local.sh
 ```
 
 実行後、GCS バケット `dp-spotify-raw` に以下が作成されれば成功：
