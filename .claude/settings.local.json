@@ -7,7 +7,11 @@
       "Bash(brew install *)",
       "Bash(ssh *)",
       "Bash(gh pr *)",
-      "Bash(git checkout *)"
+      "Bash(git checkout *)",
+      "Bash(chmod +x *)",
+      "Bash(bash *)",
+      "Bash(uv pip *)",
+      "Bash(uv run *)"
     ]
   }
 }
