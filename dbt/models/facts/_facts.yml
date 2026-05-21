@@ -1,0 +1,27 @@
+version: 2
+
+models:
+  - name: fct_saved_tracks
+    description: お気に入り登録楽曲のファクトテーブル。grain=track_id（1行=1曲）。added_at で日次パーティション、track_id でクラスタリング。
+    columns:
+      - name: added_at
+        description: お気に入りに追加した日時
+        data_type: timestamp
+        tests:
+          - not_null
+      - name: added_datetime
+        description: お気に入りに追加した日時
+        data_type: datetime
+        tests:
+          - not_null
+      - name: track_id
+        description: Spotify トラック ID（主キー）
+        data_type: string
+        tests:
+          - not_null
+          - unique
+      - name: date_id
+        description: dim_date との結合キー（YYYYMMDD 形式）
+        data_type: int64
+        tests:
+          - not_null

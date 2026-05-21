@@ -1,0 +1,26 @@
+version: 2
+
+models:
+  - name: int_track_artists
+    description: stg_saved_tracks の artists 配列を UNNEST した曲×アーティストの中間モデル。dim_artist の元データ。
+    columns:
+      - name: track_id
+        description: Spotify トラック ID
+        data_type: string
+        tests:
+          - not_null
+      - name: artist_id
+        description: Spotify アーティスト ID
+        data_type: string
+        tests:
+          - not_null
+      - name: artist_name
+        description: アーティスト名
+        data_type: string
+        tests:
+          - not_null
+      - name: spotify_url
+        description: Spotify のアーティスト URL
+        data_type: string
+        tests:
+          - not_null

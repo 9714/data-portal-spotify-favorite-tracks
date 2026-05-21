@@ -22,8 +22,9 @@ Step 3: dbt run
 ### BigQuery への Load
 - `WRITE_TRUNCATE`（毎回全件取得のため上書き）
 - スキーマ自動検出は使わず、明示的にスキーマを定義する
-- `GCS_ENV=dev` のときはデータセットに `dev_` プレフィックスを付ける（例：`dev_raw`）。dbt も同様
+- `GCS_ENV=dev` のときはデータセットに `dev_` プレフィックスを付ける（例：`dev_raw`）
 - `GCS_ENV=prd` のときはプレフィックスなし（例：`raw`）
+- dbt は `profiles.yml` の targets（dev/prd）で切り替える。`main.py` が `GCS_ENV` から `--target` を決定して渡す
 
 ---
 
@@ -34,6 +35,7 @@ Step 3: dbt run
 | `SPOTIFY_CLIENT_ID` | Secret Manager: `spotify-client-id` | |
 | `SPOTIFY_CLIENT_SECRET` | Secret Manager: `spotify-client-secret` | |
 | `SPOTIFY_REFRESH_TOKEN` | Secret Manager: `spotify-refresh-token` | |
+| `GCS_ENV` | Cloud Run 環境変数 | `prd`（ローカルはコードデフォルトの `dev`） |
 | `GCS_BUCKET` | Cloud Run 環境変数 | `dp-spotify-raw` |
 | `BQ_PROJECT` | Cloud Run 環境変数 | GCP プロジェクト ID |
 | `BQ_DATASET` | Cloud Run 環境変数 | `raw` |
@@ -64,55 +66,29 @@ Step 3: dbt run
 ## dbt モデル設計
 
 ### staging
-- `stg_saved_tracks`：`raw.saved_tracks` の `track` JSON を展開してカラム化
+- `stg_saved_tracks`：`raw.saved_tracks` の `track` JSON を展開してカラム化（1行=1 track）
+  - 展開するカラム：`track_id` / `track_name` / `duration_ms` / `explicit` / `isrc` / `spotify_url` / `album_id` / `album_name` / `album_type` / `album_release_date` / `artists`（JSON配列のまま保持）
 
 ### dimensions
-- `dim_track`：`track_id` でユニーク化
-- `dim_artist`：`artists` 配列を UNNEST して `artist_id` でユニーク化
-- `dim_date`：`added_at` から `date_id`（YYYYMMDD整数）/ `year` / `month` / `day` / `day_of_week` を生成
+- `dim_track`：`track_id` でユニーク化（`track_name` / `duration_ms` / `explicit` / `isrc` / `spotify_url` / `album_id` / `album_name` / `album_type` / `album_release_date`）
+- `dim_artist`：`stg_saved_tracks.artists` 配列を UNNEST して `artist_id` でユニーク化（`artist_name` / `spotify_url`）
+- `dim_date`：`added_at` から `date_id`（YYYYMMDD整数）/ `date` / `year` / `month` / `day` / `day_of_week` を生成
+
+### intermediate
+- `int_track_artists`：`stg_saved_tracks.artists` を UNNEST した `track_id` × `artist_id` ペア。`dim_artist` の元データ
 
 ### facts
-- `fct_saved_tracks`：`added_at` / `track_id` / `artist_id` / `date_id` のグレイン
+- `fct_saved_tracks`：grain = `track_id`（`added_at` / `track_id` / `date_id`）
 
 ### genres の扱い
-`track.artists[].genres` は REPEATED。`dim_artist` 作成時に UNNEST して `artist_genres` ブリッジテーブルを生成する。
+Spotify API の `saved_tracks` レスポンスには `track.artists[].genres` が含まれない（`/artists/{id}` エンドポイントを別途呼ぶ必要がある）。現時点ではスコープ外とし、ETL 拡張時に追加する。
 
 ---
 
-## GCP リソース
+## BigQuery 物理設計
 
-| リソース | 値 |
-|---|---|
-| リージョン | `asia-northeast1` |
-| GCS バケット | `dp-spotify-raw` |
-| BQ データセット（ETL） | `raw` |
-| Scheduler cron | `0 21 * * *` UTC = JST 06:00 |
-| BQ パーティション | `added_at` で DATE パーティション |
-| BQ クラスタリング | `track_id` |
-
----
-
-## Lint / Format
-
-### Python — ruff
-
-```bash
-cd etl
-uv run ruff check . --fix   # lint + 自動修正
-uv run ruff format .        # format
-```
-
-CI（`lint.yml`）は `ruff check` と `ruff format --check` を実行する。ローカルで通してから push する。
-
-### SQL — sqlfluff（dialect: bigquery）
-
-```bash
-cd etl
-uv run sqlfluff lint ../dbt/ --dialect bigquery   # lint
-uv run sqlfluff fix ../dbt/ --dialect bigquery    # format
-```
-
-dbt モデル（`.sql`）はすべて sqlfluff の対象。CI も同じコマンドを実行する。
+- raw テーブルは `added_at` で DATE パーティション
+- mart テーブルの主キーカラムでクラスタリング（`track_id` など）
 
 ---
 
@@ -127,6 +103,26 @@ dbt モデル（`.sql`）はすべて sqlfluff の対象。CI も同じコマン
 
 - 各ステップの開始・終了を `[Step N] 処理名: start/done` で出力する
 - done 行には件数・パスなど有用な補足情報を含める
+
+---
+
+## dbt コーディング規約
+
+### モデル YAML
+- `description` はモデル・カラム問わず必ず記載する（日本語）
+- `data_type` は全カラムに必ず指定する
+- `not_null` テストは NULL を許容する明確な事情がない限り全カラムに追加する
+
+### カラム命名・型規約
+
+| 型 | タイムゾーン | サフィックス | 例 |
+|---|---|---|---|
+| `DATE` | JST 変換済み | `_date` | `added_date` |
+| `DATETIME` | JST 変換済み | `_datetime` | `added_datetime` |
+| `TIMESTAMP` | UTC | `_at` | `added_at` |
+
+- `_at`：raw レイヤーの TIMESTAMP はそのまま UTC で保持
+- `_date` / `_datetime`：staging 以降で JST に変換してカラム化する
 
 ---
 

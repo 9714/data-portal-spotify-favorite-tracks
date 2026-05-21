@@ -46,3 +46,25 @@ jobs:
             --set-env-vars="GCS_BUCKET=dp-spotify-raw,GCS_ENV=prd,BQ_PROJECT=${{ secrets.GCP_PROJECT_ID }},BQ_DATASET=raw" \
             --service-account=etl-job-sa@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com \
             --project=${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Update Cloud Scheduler
+        run: |
+          if gcloud scheduler jobs describe spotify-etl-scheduler \
+            --location=${{ secrets.GCP_REGION }} \
+            --project=${{ secrets.GCP_PROJECT_ID }} 2>/dev/null; then
+            gcloud scheduler jobs update http spotify-etl-scheduler \
+              --schedule="0 21 * * 0" \
+              --uri="https://${{ secrets.GCP_REGION }}-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/${{ secrets.GCP_PROJECT_ID }}/jobs/spotify-etl:run" \
+              --http-method=POST \
+              --oauth-service-account-email=scheduler-sa@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com \
+              --location=${{ secrets.GCP_REGION }} \
+              --project=${{ secrets.GCP_PROJECT_ID }}
+          else
+            gcloud scheduler jobs create http spotify-etl-scheduler \
+              --schedule="0 21 * * 0" \
+              --uri="https://${{ secrets.GCP_REGION }}-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/${{ secrets.GCP_PROJECT_ID }}/jobs/spotify-etl:run" \
+              --http-method=POST \
+              --oauth-service-account-email=scheduler-sa@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com \
+              --location=${{ secrets.GCP_REGION }} \
+              --project=${{ secrets.GCP_PROJECT_ID }}
+          fi

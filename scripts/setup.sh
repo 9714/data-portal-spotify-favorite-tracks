@@ -1,15 +1,20 @@
 #!/bin/bash
 set -e
 
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+# gitコマンドを使って、スクリプトの場所に関わらずプロジェクトのルート絶対パスを強制取得
+ROOT="$(git rev-parse --show-toplevel)"
 
-echo "Installing ETL and dbt dependencies..."
-cd "$ROOT/etl"
+echo "Creating virtual environment at Root: $ROOT"
+cd "$ROOT"
 uv venv --clear
-uv pip install -r requirements.txt
-uv pip install dbt-bigquery
 
-echo "Installing dev dependencies (ruff, sqlfluff)..."
+echo "Installing product and dev dependencies..."
+# 絶対パスで確実にファイルを指定する
+uv pip install -r "$ROOT/requirements.txt"
 uv pip install -r "$ROOT/requirements-dev.txt"
 
-echo "Done. Run with: cd etl && uv run python3 main.py"
+echo "------------------------------------------------"
+echo "Done! Pure root-based environment is ready."
+echo "- Run lint: uv run sqlfluff lint dbt/models/"
+echo "- Run ETL:  uv run python3 etl/main.py"
+echo "------------------------------------------------"

@@ -21,12 +21,36 @@ jobs:
 
   lint-sql:
     runs-on: ubuntu-latest
+    # WIFでIDトークンを発行するために、GHAに必要な権限を明示します
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+      
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install sqlfluff
-        run: pip install sqlfluff dbt-bigquery
+      # 1. 既存のWIF設定を使って Google Cloud に認証
+      - name: Authenticate to Google Cloud via WIF
+        uses: google-github-actions/auth@v2
+        with:
+          # お手元の設定に合わせて provider と service_account を書き換えてください
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SA }}
 
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install sqlfluff and dbt dependencies
+        run: pip install sqlfluff sqlfluff-templater-dbt dbt-bigquery
+
+      - name: Install dbt packages
+        run: dbt deps --project-dir dbt
+
+      # 2. 認証が通った状態で SQLFluff を実行
       - name: Lint SQL
-        run: sqlfluff lint dbt/models/ --dialect bigquery
+        env:
+          BQ_PROJECT: "favorite-track-analyze"
+        run: sqlfluff lint dbt/models/
