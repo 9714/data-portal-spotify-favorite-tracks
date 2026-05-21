@@ -52,3 +52,16 @@ class SpotifyClient:
             params = None  # next URL にはすでにクエリパラメータが含まれている
 
         return tracks
+
+    def get_artists(self, artist_ids: list[str]) -> list[dict]:
+        # 50件/リクエストでバッチ取得（/artists の上限）
+        artists = []
+        url = f"{self._API_BASE}/artists"
+
+        for i in range(0, len(artist_ids), 50):
+            chunk = artist_ids[i : i + 50]
+            data = self._get(url, params={"ids": ",".join(chunk)})
+            artists.extend(data["artists"])
+            time.sleep(0.1)
+
+        return artists
