@@ -5,7 +5,8 @@
       "Bash(git commit -m ' *)",
       "Bash(git push *)",
       "Bash(brew install *)",
-      "Bash(ssh *)"
+      "Bash(ssh *)",
+      "Bash(gh pr *)"
     ]
   }
 }
