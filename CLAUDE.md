@@ -14,18 +14,13 @@ Step 2: GCS → BigQuery Load Job (raw テーブル)
 Step 3: dbt run
 ```
 
-### 差分取得ロジック
-- 初回：`saved_tracks` を全件取得
-- 2回目以降：`raw.saved_tracks` の `MAX(added_at)` を取得し、それ以降のみ取得
-- `audio_features` は当日取得した `saved_tracks` の `track_id` 分だけ取得する
-
 ### GCS への書き込み
 - フォーマット：JSONL（1行1レコード）
 - パス：`raw/saved_tracks/YYYY-MM-DD.jsonl` / `raw/audio_features/YYYY-MM-DD.jsonl`
 - フラット化しない。ネスト構造はそのまま書き込む（dbt に委譲）
 
 ### BigQuery への Load
-- `WRITE_APPEND`（日付パーティションに追記）
+- `WRITE_TRUNCATE`（毎回全件取得のため上書き）
 - スキーマ自動検出は使わず、明示的にスキーマを定義する
 
 ---
@@ -62,36 +57,15 @@ Step 3: dbt run
 ]
 ```
 
-### raw.audio_features
-```json
-[
-  {"name": "id",               "type": "STRING"},
-  {"name": "danceability",     "type": "FLOAT"},
-  {"name": "energy",           "type": "FLOAT"},
-  {"name": "key",              "type": "INTEGER"},
-  {"name": "loudness",         "type": "FLOAT"},
-  {"name": "mode",             "type": "INTEGER"},
-  {"name": "speechiness",      "type": "FLOAT"},
-  {"name": "acousticness",     "type": "FLOAT"},
-  {"name": "instrumentalness", "type": "FLOAT"},
-  {"name": "liveness",         "type": "FLOAT"},
-  {"name": "valence",          "type": "FLOAT"},
-  {"name": "tempo",            "type": "FLOAT"},
-  {"name": "duration_ms",      "type": "INTEGER"},
-  {"name": "time_signature",   "type": "INTEGER"}
-]
-```
-
 ---
 
 ## dbt モデル設計
 
 ### staging
 - `stg_saved_tracks`：`raw.saved_tracks` の `track` JSON を展開してカラム化
-- `stg_audio_features`：`raw.audio_features` をリネーム・型変換
 
 ### dimensions
-- `dim_track`：`track_id` でユニーク化。audio_features を JOIN して保持
+- `dim_track`：`track_id` でユニーク化
 - `dim_artist`：`artists` 配列を UNNEST して `artist_id` でユニーク化
 - `dim_date`：`added_at` から `date_id`（YYYYMMDD整数）/ `year` / `month` / `day` / `day_of_week` を生成
 
@@ -113,6 +87,30 @@ Step 3: dbt run
 | Scheduler cron | `0 21 * * *` UTC = JST 06:00 |
 | BQ パーティション | `added_at` で DATE パーティション |
 | BQ クラスタリング | `track_id` |
+
+---
+
+## Lint / Format
+
+### Python — ruff
+
+```bash
+cd etl
+uv run ruff check . --fix   # lint + 自動修正
+uv run ruff format .        # format
+```
+
+CI（`lint.yml`）は `ruff check` と `ruff format --check` を実行する。ローカルで通してから push する。
+
+### SQL — sqlfluff（dialect: bigquery）
+
+```bash
+cd etl
+uv run sqlfluff lint ../dbt/ --dialect bigquery   # lint
+uv run sqlfluff fix ../dbt/ --dialect bigquery    # format
+```
+
+dbt モデル（`.sql`）はすべて sqlfluff の対象。CI も同じコマンドを実行する。
 
 ---
 

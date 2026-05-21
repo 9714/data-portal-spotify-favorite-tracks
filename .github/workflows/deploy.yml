@@ -43,6 +43,6 @@ jobs:
             --memory 512Mi \
             --task-timeout 300 \
             --set-secrets="SPOTIFY_CLIENT_ID=spotify-client-id:latest,SPOTIFY_CLIENT_SECRET=spotify-client-secret:latest,SPOTIFY_REFRESH_TOKEN=spotify-refresh-token:latest" \
-            --set-env-vars="GCS_BUCKET=dp-spotify-raw,BQ_PROJECT=${{ secrets.GCP_PROJECT_ID }},BQ_DATASET=raw" \
+            --set-env-vars="GCS_BUCKET=dp-spotify-raw,GCS_ENV=prd,BQ_PROJECT=${{ secrets.GCP_PROJECT_ID }},BQ_DATASET=raw" \
             --service-account=etl-job-sa@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com \
             --project=${{ secrets.GCP_PROJECT_ID }}
