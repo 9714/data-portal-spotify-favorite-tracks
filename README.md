@@ -114,7 +114,7 @@ cp .env.example .env  # SPOTIFY_* と BQ_PROJECT を入力
 cd etl && uv venv && source .venv/bin/activate && uv pip install -r requirements.txt
 
 # ETL 実行（Step 1: Spotify API → GCS）
-set -a && source ../.env && set +a && python main.py
+set -a && source ../.env && set +a && python3 main.py
 ```
 
 実行後、GCS バケット `dp-spotify-raw` に以下が作成されれば成功：
