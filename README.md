@@ -106,8 +106,8 @@ gcloud auth application-default login
 cp .env.example .env  # SPOTIFY_* と BQ_PROJECT を入力
 ./scripts/setup.sh    # venv 構築・依存関係インストール
 
-# ETL 実行
-cd etl && set -a && source ../.env && set +a && python3 main.py
+# ETL 実行（uv run が venv を自動で使用する）
+cd etl && set -a && source ../.env && set +a && uv run python3 main.py
 ```
 
 実行後、GCS バケット `dp-spotify-raw/dev/raw/saved_tracks/YYYY-MM-DD.jsonl` が作成されれば成功。
