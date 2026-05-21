@@ -1,17 +1,17 @@
 # Spotify Favorite Tracks Data Portal
 
-Spotify のお気に入り曲を毎日 BigQuery に蓄積し、ダッシュボードで可視化するデータパイプライン。
+Spotify のお気に入り曲を毎週 BigQuery に蓄積し、ダッシュボードで可視化するデータパイプライン。
 
 ## 概要
 
-Cloud Scheduler が毎朝6時（JST）に Cloud Run Jobs を起動し、Spotify API からデータを取得して BigQuery に格納する。dbt がデータモデルを変換する。可視化は別リポジトリの Streamlit Dashboard が担う。
+Cloud Scheduler が毎週月曜 06:00（JST）に Cloud Run Jobs を起動し、Spotify API からデータを取得して BigQuery に格納する。dbt がデータモデルを変換する。可視化は別リポジトリの Streamlit Dashboard が担う。
 
 ```
-Cloud Scheduler (毎日 06:00 JST)
+Cloud Scheduler (毎週月曜 06:00 JST)
   └→ Cloud Run Jobs
        ├─ Step 1: Spotify API → GCS (JSONL)
        ├─ Step 2: GCS → BigQuery raw テーブル
-       └─ Step 3: dbt run (staging → dim → fct)
+       └─ Step 3: dbt run (staging → intermediate → dim → fct)
 
 BigQuery  ←  別リポジトリの Streamlit Dashboard が参照
 ```
@@ -29,12 +29,22 @@ BigQuery  ←  別リポジトリの Streamlit Dashboard が参照
 ```
 .
 ├── etl/                    # Cloud Run Jobs で実行する Python コード
-│   ├── main.py             # エントリポイント
+│   ├── main.py             # エントリポイント（Step 1-3 を順次実行）
 │   ├── spotify_client.py   # Spotify API クライアント
 │   ├── gcs_writer.py       # GCS への JSONL 書き込み
-│   ├── bq_loader.py        # GCS → BigQuery Load Job（未実装）
+│   ├── bq_loader.py        # GCS → BigQuery Load Job
 │   └── requirements.txt
-├── dbt/                    # dbt プロジェクト（未実装）
+├── dbt/                    # dbt プロジェクト
+│   ├── dbt_project.yml
+│   ├── profiles.yml        # BigQuery 接続設定（dev/prd ターゲット）
+│   ├── packages.yml        # dbt_utils
+│   ├── macros/
+│   │   └── generate_schema_name.sql
+│   └── models/
+│       ├── staging/        # raw JSON の展開
+│       ├── intermediate/   # 配列の UNNEST など中間変換
+│       ├── dimensions/     # dim_track / dim_artist / dim_date
+│       └── facts/          # fct_saved_tracks
 ├── scripts/
 │   └── setup.sh            # ローカル開発環境のセットアップ
 ├── .github/
@@ -50,9 +60,10 @@ BigQuery  ←  別リポジトリの Streamlit Dashboard が参照
 | リソース | 設定 |
 |---|---|
 | Cloud Run Jobs | 512Mi / タイムアウト 300s / asia-northeast1 |
-| Cloud Scheduler | `0 21 * * *` UTC（JST 06:00） |
+| Cloud Scheduler | `0 21 * * 0` UTC（JST 月曜 06:00） |
 | Cloud Storage | `dp-spotify-raw` / asia-northeast1 |
-| BigQuery | `raw` dataset / asia-northeast1 |
+| BigQuery（raw） | `raw` dataset / asia-northeast1 |
+| BigQuery（mart） | `mart` dataset / asia-northeast1 |
 | Artifact Registry | `spotify-etl` / Docker / asia-northeast1 |
 | Secret Manager | `spotify-client-id` / `spotify-client-secret` / `spotify-refresh-token` |
 
@@ -81,58 +92,59 @@ GitHub Actions → Deploy → **Run workflow** から手動実行：
 1. Workload Identity Federation で認証
 2. Docker イメージをビルドして Artifact Registry へ push
 3. Cloud Run Jobs をデプロイ
+4. Cloud Scheduler のスケジュールを更新
 
 GitHub Secrets：`WIF_PROVIDER` / `GCP_PROJECT_ID` / `GCP_REGION`
 
 ## BigQuery データモデル
 
 ```
-raw.saved_tracks      GCS から Load したまま（ネスト構造維持）
+raw.saved_tracks          GCS から Load したまま（ネスト構造維持）
 
-stg_saved_tracks      型変換・カラム名の整理
+stg_saved_tracks          型変換・JSON 展開・JST カラム追加
 
-dim_track             track_id ユニーク
-dim_artist            artist_id ユニーク
-dim_date              added_at から生成した日付ディメンション
+int_track_artists         artists 配列を UNNEST した track × artist ペア
 
-fct_saved_tracks      added_at / track_id / artist_id / date_id
+dim_track                 track_id でユニーク
+dim_artist                artist_id でユニーク
+dim_date                  2005-01-01 〜 当日の日付ディメンション（date_spine）
+
+fct_saved_tracks          added_at / track_id / date_id（grain = track_id）
 ```
+
+dev 環境では各データセットに `dev_` プレフィックスが付く（`dev_raw` / `dev_mart`）。
 
 ## ローカル開発
 
-```bash
-# 初回のみ
-gcloud auth application-default login
-cp .env.example .env  # SPOTIFY_* と BQ_PROJECT を入力
-./scripts/setup.sh    # venv 構築・依存関係インストール
+### 前提
 
-# ETL 実行
-cd etl && uv run python3 main.py
+```bash
+gcloud auth application-default login
+cp .env.example .env  # SPOTIFY_* / BQ_PROJECT / GCS_BUCKET を入力（BQ_DATASET はデフォルト値あり）
 ```
 
-実行後、GCS バケット `dp-spotify-raw/dev/raw/saved_tracks/YYYY-MM-DD.jsonl` が作成されれば成功。
+### ETL 実行
 
 ```bash
-# dbt（実装後）
-cd etl && uv run dbt run --project-dir ../dbt/
-cd etl && uv run dbt test --project-dir ../dbt/
+make etl
+```
+
+- Step 1 完了後：GCS `dp-spotify-raw/raw/saved_tracks/YYYY-MM-DD.jsonl` が作成される
+- Step 2 完了後：BigQuery `dev_raw.saved_tracks` にデータが格納される
+- Step 3 完了後：BigQuery `dev_mart` に各モデルが作成される
+
+### dbt 単体実行
+
+```bash
+make dbt-deps   # パッケージ取得（初回・packages.yml 変更時）
+make dbt-run    # モデル実行
+make dbt-test   # テスト
 ```
 
 ## Lint / Format
 
-### Python（ruff）
-
 ```bash
-cd etl
-uv run ruff check .          # lint
-uv run ruff check . --fix    # lint + 自動修正
-uv run ruff format .         # format
-```
-
-### SQL（sqlfluff / BigQuery dialect）
-
-```bash
-cd etl
-uv run sqlfluff lint ../dbt/ --dialect bigquery    # lint
-uv run sqlfluff fix ../dbt/ --dialect bigquery     # format
+make lint       # Python（ruff）+ SQL（sqlfluff）まとめて実行
+make lint-py    # Python のみ
+make lint-sql   # SQL のみ
 ```

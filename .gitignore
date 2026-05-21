@@ -30,5 +30,10 @@ htmlcov/
 # Streamlit
 .streamlit/secrets.toml
 
+# dbt
+dbt/target/
+dbt/dbt_packages/
+dbt/logs/
+
 # Claude Code
 .claude/settings.local.json

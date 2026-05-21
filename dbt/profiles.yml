@@ -1,0 +1,17 @@
+spotify:
+  target: dev
+  outputs:
+    dev:
+      type: bigquery
+      method: oauth
+      project: "{{ env_var('BQ_PROJECT') }}"
+      dataset: dev_mart
+      location: asia-northeast1
+      threads: 4
+    prd:
+      type: bigquery
+      method: oauth
+      project: "{{ env_var('BQ_PROJECT') }}"
+      dataset: mart
+      location: asia-northeast1
+      threads: 4

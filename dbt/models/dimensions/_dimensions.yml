@@ -1,0 +1,110 @@
+version: 2
+
+models:
+  - name: dim_track
+    description: track_id でユニーク化した楽曲ディメンション。複数回お気に入り登録された曲は最新の added_at を優先。
+    columns:
+      - name: track_id
+        description: Spotify トラック ID（主キー）
+        data_type: string
+        tests:
+          - not_null
+          - unique
+      - name: track_name
+        description: 曲名
+        data_type: string
+        tests:
+          - not_null
+      - name: duration_ms
+        description: 曲の長さ（ミリ秒）
+        data_type: int64
+        tests:
+          - not_null
+      - name: explicit
+        description: 過激なコンテンツフラグ
+        data_type: bool
+        tests:
+          - not_null
+      - name: isrc
+        description: 国際標準レコーディングコード（ISRC）。Spotify 側で未設定の場合は NULL。
+        data_type: string
+      - name: spotify_url
+        description: Spotify の曲 URL
+        data_type: string
+        tests:
+          - not_null
+      - name: album_id
+        description: Spotify アルバム ID
+        data_type: string
+        tests:
+          - not_null
+      - name: album_name
+        description: アルバム名
+        data_type: string
+        tests:
+          - not_null
+      - name: album_type
+        description: アルバム種別（album / single / compilation）
+        data_type: string
+        tests:
+          - not_null
+      - name: album_release_date
+        description: アルバムのリリース日。Spotify が年のみ（例：1995）を返す場合があるため文字列で保持。
+        data_type: string
+        tests:
+          - not_null
+
+  - name: dim_artist
+    description: artist_id でユニーク化したアーティストディメンション。int_track_artists から生成。
+    columns:
+      - name: artist_id
+        description: Spotify アーティスト ID（主キー）
+        data_type: string
+        tests:
+          - not_null
+          - unique
+      - name: artist_name
+        description: アーティスト名
+        data_type: string
+        tests:
+          - not_null
+      - name: spotify_url
+        description: Spotify のアーティスト URL
+        data_type: string
+        tests:
+          - not_null
+
+  - name: dim_date
+    description: 2005-01-01 から当日までの日付ディメンション。dbt_utils.date_spine で生成。
+    columns:
+      - name: date_id
+        description: 日付の整数キー（YYYYMMDD 形式、主キー）
+        data_type: int64
+        tests:
+          - not_null
+          - unique
+      - name: calendar_date
+        description: 日付
+        data_type: date
+        tests:
+          - not_null
+      - name: year
+        description: 年
+        data_type: int64
+        tests:
+          - not_null
+      - name: month
+        description: 月（1〜12）
+        data_type: int64
+        tests:
+          - not_null
+      - name: day
+        description: 日（1〜31）
+        data_type: int64
+        tests:
+          - not_null
+      - name: day_of_week
+        description: 曜日（1=日曜, 2=月曜, ..., 7=土曜）
+        data_type: int64
+        tests:
+          - not_null
