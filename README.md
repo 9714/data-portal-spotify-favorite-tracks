@@ -110,16 +110,19 @@ fct_saved_tracks          added_at / track_id / artist_id / date_id の集約テ
 gcloud auth application-default login
 cp .env.example .env  # SPOTIFY_* と BQ_PROJECT を入力
 
-# セットアップ
-cd etl && uv venv && source .venv/bin/activate && uv pip install -r requirements.txt
+# 仮想環境の構築（初回のみ）
+cd etl
+uv venv
+uv pip install -r requirements.txt
 
-# ETL 実行（Step 1: Spotify API → GCS）
-set -a && source ../.env && set +a && python3 main.py
+# ETL 実行
+source .venv/bin/activate
+set -a && source ../.env && set +a
+python3 main.py
 ```
 
 実行後、GCS バケット `dp-spotify-raw` に以下が作成されれば成功：
 - `raw/saved_tracks/YYYY-MM-DD.jsonl`
-- `raw/audio_features/YYYY-MM-DD.jsonl`
 
 ```bash
 # dbt（実装後）
