@@ -107,15 +107,13 @@ cp .env.example .env  # SPOTIFY_* と BQ_PROJECT を入力
 ./scripts/setup.sh    # venv 構築・依存関係インストール
 
 # ETL 実行
-cd etl && source .venv/bin/activate
-set -a && source ../.env && set +a && python3 main.py
+cd etl && set -a && source ../.env && set +a && python3 main.py
 ```
 
 実行後、GCS バケット `dp-spotify-raw/dev/raw/saved_tracks/YYYY-MM-DD.jsonl` が作成されれば成功。
 
 ```bash
 # dbt（実装後）
-source etl/.venv/bin/activate
 dbt run --project-dir dbt/
 dbt test --project-dir dbt/
 ```

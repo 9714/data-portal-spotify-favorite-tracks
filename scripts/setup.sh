@@ -3,12 +3,8 @@ set -e
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 
-echo "Setting up ETL environment..."
-cd "$ROOT/etl"
-uv venv
-uv pip install -r requirements.txt
+echo "Installing ETL and dbt dependencies..."
+uv pip install --system -r "$ROOT/etl/requirements.txt"
+uv pip install --system dbt-bigquery
 
-echo "Setting up dbt environment..."
-uv pip install dbt-bigquery
-
-echo "Done. Activate with: source etl/.venv/bin/activate"
+echo "Done."
