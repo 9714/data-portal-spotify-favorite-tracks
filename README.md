@@ -4,7 +4,7 @@ Spotify のお気に入り曲を毎週 BigQuery に蓄積し、ダッシュボ�
 
 ## 概要
 
-Cloud Scheduler が毎週月曜 06:00（JST）に Cloud Run Jobs を起動し、Spotify API からデータを取得して BigQuery に格納する。dbt がデータモデルを変換する。可視化は別リポジトリの Streamlit Dashboard が担う。
+Cloud Scheduler が毎週月曜 06:00（JST）に Cloud Run Jobs を起動し、Spotify API からデータを取得して BigQuery に格納する。dbt がデータモデルを変換する。可視化は Data Studio（旧 Looker Studio）が担う。
 
 ```
 Cloud Scheduler (毎週月曜 06:00 JST)
@@ -13,7 +13,7 @@ Cloud Scheduler (毎週月曜 06:00 JST)
        ├─ Step 2: GCS → BigQuery raw テーブル
        └─ Step 3: dbt run (staging → intermediate → dim → fct)
 
-BigQuery  ←  別リポジトリの Streamlit Dashboard が参照
+BigQuery  ←  Data Studio が参照
 ```
 
 ## 取得データ

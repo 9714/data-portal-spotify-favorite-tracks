@@ -27,9 +27,6 @@ htmlcov/
 # Jupyter
 .ipynb_checkpoints
 
-# Streamlit
-.streamlit/secrets.toml
-
 # dbt
 dbt/target/
 dbt/dbt_packages/
