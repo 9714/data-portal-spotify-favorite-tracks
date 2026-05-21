@@ -90,6 +90,30 @@ Step 3: dbt run
 
 ---
 
+## Lint / Format
+
+### Python — ruff
+
+```bash
+cd etl
+uv run ruff check . --fix   # lint + 自動修正
+uv run ruff format .        # format
+```
+
+CI（`lint.yml`）は `ruff check` と `ruff format --check` を実行する。ローカルで通してから push する。
+
+### SQL — sqlfluff（dialect: bigquery）
+
+```bash
+cd etl
+uv run sqlfluff lint ../dbt/ --dialect bigquery   # lint
+uv run sqlfluff fix ../dbt/ --dialect bigquery    # format
+```
+
+dbt モデル（`.sql`）はすべて sqlfluff の対象。CI も同じコマンドを実行する。
+
+---
+
 ## 実装時の注意点
 
 - Cloud Run Jobs 上では ADC が自動的に `etl-job-sa` として動作する。クレデンシャルファイルを扱わない

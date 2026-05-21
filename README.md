@@ -117,3 +117,22 @@ cd etl && uv run python3 main.py
 cd etl && uv run dbt run --project-dir ../dbt/
 cd etl && uv run dbt test --project-dir ../dbt/
 ```
+
+## Lint / Format
+
+### Python（ruff）
+
+```bash
+cd etl
+uv run ruff check .          # lint
+uv run ruff check . --fix    # lint + 自動修正
+uv run ruff format .         # format
+```
+
+### SQL（sqlfluff / BigQuery dialect）
+
+```bash
+cd etl
+uv run sqlfluff lint ../dbt/ --dialect bigquery    # lint
+uv run sqlfluff fix ../dbt/ --dialect bigquery     # format
+```
