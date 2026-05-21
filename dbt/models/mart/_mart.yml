@@ -2,7 +2,7 @@ version: 2
 
 models:
   - name: mart_saved_tracks
-    description: Looker Studio 向けワイドテーブル。grain=track_id（1行=1曲）。
+    description: Data Studio 向けワイドテーブル。grain=track_id（1行=1曲）。
     columns:
       - name: added_at
         description: お気に入りに追加した日時（UTC）
@@ -103,7 +103,7 @@ models:
         data_type: int64
 
   - name: mart_track_artists
-    description: Looker Studio 向けアーティスト分析テーブル。grain=track_id × artist_id。
+    description: Data Studio 向けアーティスト分析テーブル。grain=track_id × artist_id。
     columns:
       - name: added_at
         description: お気に入りに追加した日時（UTC）
