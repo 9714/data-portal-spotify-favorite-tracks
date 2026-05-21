@@ -19,15 +19,17 @@ class BQLoader:
         table_ref = f"{self._project}.{self._dataset}.{table_name}"
 
         schema = self._get_schema(table_name)
+        partition_field = self._get_partition_field(table_name)
         job_config = bigquery.LoadJobConfig(
             source_format=bigquery.SourceFormat.NEWLINE_DELIMITED_JSON,
             schema=schema,
             write_disposition=bigquery.WriteDisposition.WRITE_TRUNCATE,
-            time_partitioning=bigquery.TimePartitioning(
-                type_=bigquery.TimePartitioningType.DAY,
-                field="added_at",
-            ),
         )
+        if partition_field:
+            job_config.time_partitioning = bigquery.TimePartitioning(
+                type_=bigquery.TimePartitioningType.DAY,
+                field=partition_field,
+            )
 
         load_job = self._client.load_table_from_uri(
             uri, table_ref, job_config=job_config
@@ -41,7 +43,18 @@ class BQLoader:
                 bigquery.SchemaField("added_at", "TIMESTAMP"),
                 bigquery.SchemaField("track", "JSON"),
             ],
+            "artists": [
+                bigquery.SchemaField("artist_id", "STRING"),
+                bigquery.SchemaField("artist", "JSON"),
+            ],
         }
         if table_name not in schemas:
             raise ValueError(f"Unknown table: {table_name}")
         return schemas[table_name]
+
+    def _get_partition_field(self, table_name: str) -> str | None:
+        partition_fields = {
+            "saved_tracks": "added_at",
+            "artists": None,
+        }
+        return partition_fields.get(table_name)

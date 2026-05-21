@@ -145,3 +145,9 @@ models:
         data_type: string
         tests:
           - not_null
+      - name: genres
+        description: ジャンルの JSON 配列（例：["j-pop", "hip-hop"]）。Spotify 未登録の場合は空配列または NULL。
+        data_type: json
+      - name: artist_popularity
+        description: Spotify が算出するアーティスト人気度（0〜100）。stg_artists に存在しない場合は NULL。
+        data_type: int64

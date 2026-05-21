@@ -33,20 +33,22 @@ final as (
         -- 日時
         fct.added_at,
         fct.added_datetime,
-        date(fct.added_datetime) as added_date,
         dim_date.year,
         dim_date.month,
+        int_ta.track_id,
 
         -- トラック × アーティスト
-        int_ta.track_id,
         int_ta.artist_id,
         dim_artist.artist_name,
-        dim_artist.spotify_url as artist_spotify_url
+        dim_artist.spotify_url as artist_spotify_url,
+        dim_artist.genres,
+        dim_artist.popularity as artist_popularity,
+        date(fct.added_datetime) as added_date
 
     from int_ta
-    left join fct         using (track_id)
-    left join dim_date    using (date_id)
-    left join dim_artist  using (artist_id)
+    left join fct on int_ta.track_id = fct.track_id
+    left join dim_date on fct.date_id = dim_date.date_id
+    left join dim_artist on int_ta.artist_id = dim_artist.artist_id
 
 )
 

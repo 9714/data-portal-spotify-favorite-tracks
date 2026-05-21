@@ -113,6 +113,11 @@ Spotify API の `saved_tracks` レスポンスには `track.artists[].genres` �
 - `data_type` は全カラムに必ず指定する
 - `not_null` テストは NULL を許容する明確な事情がない限り全カラムに追加する
 
+### JOIN 構文
+
+- `JOIN ... ON` を使う。`JOIN ... USING` は使わない（sqlfluff ST07 ルールで禁止）
+- BigQuery は `USING` をサポートするが、このプロジェクトでは明示的な `ON` 句で統一する
+
 ### カラム命名・型規約
 
 | 型 | タイムゾーン | サフィックス | 例 |

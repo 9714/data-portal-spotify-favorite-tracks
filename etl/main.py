@@ -24,13 +24,35 @@ def main():
 
     print("[Step 1] Spotify API → GCS: start")
     tracks = client.get_saved_tracks()
-    path = writer.write(tracks, "saved_tracks", run_date)
-    print(f"[Step 1] Spotify API → GCS: done ({len(tracks)} tracks, path={path})")
+    tracks_path = writer.write(tracks, "saved_tracks", run_date)
+    print(
+        f"[Step 1] Spotify API → GCS: done ({len(tracks)} tracks, path={tracks_path})"
+    )
+
+    print("[Step 1b] Spotify API (artists) → GCS: start")
+    artist_ids = list(
+        {
+            artist["id"]
+            for item in tracks
+            for artist in item["track"]["artists"]
+            if artist.get("id")
+        }
+    )
+    raw_artists = client.get_artists(artist_ids)
+    artists = [{"artist_id": a["id"], "artist": a} for a in raw_artists if a]
+    artists_path = writer.write(artists, "artists", run_date)
+    print(
+        f"[Step 1b] Spotify API (artists) → GCS: done ({len(artists)} artists, path={artists_path})"
+    )
 
     print("[Step 2] GCS → BigQuery: start")
-    loaded_rows = loader.load(path, "saved_tracks")
+    loaded_rows = loader.load(tracks_path, "saved_tracks")
     print(
         f"[Step 2] GCS → BigQuery: done ({loaded_rows} rows, table={loader._dataset}.saved_tracks)"
+    )
+    loaded_artist_rows = loader.load(artists_path, "artists")
+    print(
+        f"[Step 2] GCS → BigQuery: done ({loaded_artist_rows} rows, table={loader._dataset}.artists)"
     )
 
     print("[Step 3] dbt run: start")
