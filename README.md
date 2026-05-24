@@ -16,6 +16,10 @@ Cloud Scheduler (毎週月曜 06:00 JST)
 BigQuery  ←  Data Studio が参照
 ```
 
+## ダッシュボード
+
+- [Looker Studio レポート](https://datastudio.google.com/reporting/6a4f73d0-c2a2-4bf9-b542-83e1e53bb00d)
+
 ## 取得データ
 
 | Spotify API | 内容 |
